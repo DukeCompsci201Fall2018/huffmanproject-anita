@@ -8,6 +8,8 @@
  * and including debug and bits read/written information
  * 
  * @author Owen Astrachan
+ * 
+ *Students: JJ Jiang (jj252) & Anita Li (al367)
  */
 
 public class HuffProcessor {
