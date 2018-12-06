@@ -112,8 +112,5 @@ else {
 			return new HuffNode (val, 0, null, null);
 		}
 		
-		
-		// TODO Auto-generated method stub
-		return null;
 	}
 }
