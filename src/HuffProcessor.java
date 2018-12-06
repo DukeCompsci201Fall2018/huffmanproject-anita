@@ -22,14 +22,14 @@ public class HuffProcessor {
 	public static final int HUFF_TREE  = HUFF_NUMBER | 1;
 
 	private final int myDebugLevel;
-	
+
 	public static final int DEBUG_HIGH = 4;
 	public static final int DEBUG_LOW = 1;
-	
+
 	public HuffProcessor() {
 		this(0);
 	}
-	
+
 	public HuffProcessor(int debug) {
 		myDebugLevel = debug;
 	}
@@ -61,12 +61,12 @@ public class HuffProcessor {
 	 *            Buffered bit stream writing to the output file.
 	 */
 	public void decompress(BitInputStream in, BitOutputStream out){
-		
+
 		int bits = in.readBits(BITS_PER_INT);
 		if (bits !=HUFF_TREE) {
 			throw new HuffException ("illegal header starts with "+bits);
 		}
-		
+
 		HuffNode root = readTreeHeader(in);
 		readCompressedBits(root, in, out);
 		/*
@@ -75,16 +75,44 @@ public class HuffProcessor {
 			if (val == -1) break;
 			out.writeBits(BITS_PER_WORD, val);
 		}
-		*/
+		 */
 		out.close();
 	}
 
 	private void readCompressedBits(HuffNode root, BitInputStream in, BitOutputStream out) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private HuffNode readTreeHeader(BitInputStream in) {
+		/*
+		 * read a single bit
+if (bit == -1) throw exception
+if (bit == 0) {
+    left = recursiveCall()
+    right = recursiveCall()
+    return new HuffNode(0,0,left,right);
+}
+else {
+    value = read nine bits from input
+    return new HuffNode(value,0,null,null);
+}
+		 */
+
+		int bits = in.readBits(1);
+		if (bits == -1)
+			throw new HuffException (bits + "is not a valid bit");
+		if (bits == 0) {
+			HuffNode left = readTreeHeader(in);
+			HuffNode right = readTreeHeader(in);
+			return new HuffNode(0,0,left,right);
+		}
+		else {
+			int val = in.readBits(BITS_PER_WORD + 1);
+			return new HuffNode (val, 0, null, null);
+		}
+		
+		
 		// TODO Auto-generated method stub
 		return null;
 	}
