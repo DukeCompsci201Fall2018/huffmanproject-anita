@@ -92,6 +92,7 @@ public class HuffProcessor {
 		while (pq.size() > 1) {
 			HuffNode left = pq.remove();
 			HuffNode right = pq.remove();
+			// I don't think this next line is right, because i'm not sure what to do for value?? So it's just 0 rn
 			HuffNode t = new HuffNode(0, left.myWeight+right.myWeight, left, right);
 			pq.add(t);
 		}
