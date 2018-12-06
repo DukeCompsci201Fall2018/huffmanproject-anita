@@ -1,25 +1,25 @@
+import java.util.PriorityQueue;
 
 /**
- * Although this class has a history of several years,
- * it is starting from a blank-slate, new and clean implementation
- * as of Fall 2018.
+ * Although this class has a history of several years, it is starting from a
+ * blank-slate, new and clean implementation as of Fall 2018.
  * <P>
- * Changes include relying solely on a tree for header information
- * and including debug and bits read/written information
+ * Changes include relying solely on a tree for header information and including
+ * debug and bits read/written information
  * 
  * @author Owen Astrachan
  * 
- *Students: JJ Jiang (jj252) & Anita Li (al367)
+ *         Students: JJ Jiang (jj252) & Anita Li (al367)
  */
 
 public class HuffProcessor {
 
 	public static final int BITS_PER_WORD = 8;
 	public static final int BITS_PER_INT = 32;
-	public static final int ALPH_SIZE = (1 << BITS_PER_WORD); 
+	public static final int ALPH_SIZE = (1 << BITS_PER_WORD);
 	public static final int PSEUDO_EOF = ALPH_SIZE;
 	public static final int HUFF_NUMBER = 0xface8200;
-	public static final int HUFF_TREE  = HUFF_NUMBER | 1;
+	public static final int HUFF_TREE = HUFF_NUMBER | 1;
 
 	private final int myDebugLevel;
 
@@ -37,101 +37,153 @@ public class HuffProcessor {
 	/**
 	 * Compresses a file. Process must be reversible and loss-less.
 	 *
-	 * @param in
-	 *            Buffered bit stream of the file to be compressed.
-	 * @param out
-	 *            Buffered bit stream writing to the output file.
+	 * @param in  Buffered bit stream of the file to be compressed.
+	 * @param out Buffered bit stream writing to the output file.
 	 */
-	public void compress(BitInputStream in, BitOutputStream out){
+	public void compress(BitInputStream in, BitOutputStream out) {
+		int[] counts = readForCounts(in);
+		HuffNode root = makeTreeFromCounts(counts);
+		String[] codings = makeCodingsFromTree(root);
 
-		while (true){
-			int val = in.readBits(BITS_PER_WORD);
-			if (val == -1) break;
-			out.writeBits(BITS_PER_WORD, val);
-		}
+		out.writeBits(BITS_PER_INT, HUFF_TREE);
+		writeHeader(root, out);
+		in.reset();
+		writeCompressedBits(codings, in, out);
 		out.close();
+		/*
+		 * while (true) { int val = in.readBits(BITS_PER_WORD); if (val == -1) break;
+		 * out.writeBits(BITS_PER_WORD, val); } out.close();
+		 */
 	}
+
+	/**
+	 * This method determines how frequently a character/chunk occurs in a stream
+	 * 
+	 * @param in is the stream
+	 * @return an array with the amount of times each chunk occurs
+	 */
+	private int[] readForCounts(BitInputStream in) {
+		int[] freq = new int[ALPH_SIZE + 1]; // initialize an array for the frequency
+		while (true) { // continue looping through until broken
+			int curr = in.readBits(BITS_PER_WORD); // read from stream
+			if (curr == -1) // if there are no bits left
+				break; // break out of the loop
+			else // if there are bits
+				freq[curr] = freq[curr] + 1; // increase frequency of that bit
+		}
+		freq[PSEUDO_EOF] = 1; // set frequency of error to be 1
+		return freq; //  return the frequency array
+	}
+
+	/**
+	 * This method creates a Huffman Tree using the array of how "heavy" (frequently) a chunk is
+	 * @param counts is the array with the frequencies
+	 * @return the first node
+	 */
+	private HuffNode makeTreeFromCounts(int[] counts) {
+
+		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
+
+		for (int index : counts) {
+			if (counts[index] > 0)
+				pq.add(new HuffNode(index,counts[index],null,null));
+		}
+
+		while (pq.size() > 1) {
+			HuffNode left = pq.remove();
+			HuffNode right = pq.remove();
+			HuffNode t = new HuffNode(0, left.myWeight+right.myWeight, left, right);
+			pq.add(t);
+		}
+		HuffNode root = pq.remove();
+		return root;
+	}
+
+	private String[] makeCodingsFromTree(HuffNode root) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private void writeHeader(HuffNode root, BitOutputStream out) {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
+		// TODO Auto-generated method stub
+
+	}
+
 	/**
 	 * Decompresses a file. Output file must be identical bit-by-bit to the
 	 * original.
 	 *
-	 * @param in
-	 *            Buffered bit stream of the file to be decompressed.
-	 * @param out
-	 *            Buffered bit stream writing to the output file.
+	 * @param in  Buffered bit stream of the file to be decompressed.
+	 * @param out Buffered bit stream writing to the output file.
 	 */
-	public void decompress(BitInputStream in, BitOutputStream out){
-
-		int bits = in.readBits(BITS_PER_INT);
-		if (bits !=HUFF_TREE) {
-			throw new HuffException ("illegal header starts with "+bits);
+	public void decompress(BitInputStream in, BitOutputStream out) {
+		int bits = in.readBits(BITS_PER_INT); // read the amount of bits
+		if (bits != HUFF_TREE) { // if it doesn't start correctly
+			throw new HuffException("illegal header starts with " + bits); // throw an exception
 		}
+		HuffNode root = readTreeHeader(in); // create a node to store the root node and call on method to create tree
+		readCompressedBits(root, in, out); // call on method to read tree and write to output
 
-		HuffNode root = readTreeHeader(in);
-		readCompressedBits(root, in, out);
-		/*
-		while (true){
-			int val = in.readBits(BITS_PER_WORD);
-			if (val == -1) break;
-			out.writeBits(BITS_PER_WORD, val);
-		}
-		 */
-		out.close();
+		out.close(); // close output file
 	}
 
-	private void readCompressedBits(HuffNode root, BitInputStream in, BitOutputStream out) {
-		HuffNode current = root; 
-		while (true) {
-			int bits = in.readBits(1);
-			if (bits == -1) {
-				throw new HuffException("bad input, no PSEUDO_EOF");
-			}
-			else { 
-				if (bits == 0) 
-					current = current.myLeft;
-				else 
-					current = current.myRight;
+	/**
+	 * This method creates a tree of HuffNodes, in which 0 values are stored as tree
+	 * nodes and 1s, followed by letters are stored as leaf nodes
+	 * 
+	 * @param in is the bitstream that must be converted to a tree
+	 * @return the HuffNode at the top, the root
+	 */
+	private HuffNode readTreeHeader(BitInputStream in) {
 
-				if (current.myLeft == null && current.myRight == null) {
-					if (current.myValue == PSEUDO_EOF) 
-						break;   // out of loop
-					else {
-						out.writeBits(BITS_PER_WORD, current.myValue);
-								current = root; // start back after leaf
+		int bits = in.readBits(1); // read the first bit
+		if (bits == -1) // if the bit equals -1 (isn't valid)
+			throw new HuffException(bits + "is not a valid bit"); // throw an exception
+		if (bits == 0) { // if bit is equal to 0
+			HuffNode left = readTreeHeader(in); // call the method again to construct the left node
+			HuffNode right = readTreeHeader(in); // call the method again to construct the right node
+			return new HuffNode(0, 0, left, right); // return a new HuffNode with the new left and right nodes
+		} else { // if the bit is an actual value (1)
+			int val = in.readBits(BITS_PER_WORD + 1); // read the next bit (a number that corresponds to a letter)
+			return new HuffNode(val, 0, null, null); // store that in a leaf node
+		}
+
+	}
+
+	/**
+	 * This method reads the tree created by the treeHeader
+	 * 
+	 * @param root is the node that is the root of the tree
+	 * @param in   is the input stream
+	 * @param out  is the end result that needs to be written to
+	 */
+	private void readCompressedBits(HuffNode root, BitInputStream in, BitOutputStream out) {
+		HuffNode current = root; // create a huffnode that starts at the root
+		while (true) { // while there are still nodes
+			int bits = in.readBits(1); // read the input stream
+			if (bits == -1) { // if the input stream isn't valid
+				throw new HuffException("bad input, no PSEUDO_EOF"); // throw an error
+			} else { // if it is valid
+				if (bits == 0) // if the bit is 0
+					current = current.myLeft; // set current to get the left node
+				else // if the bit isn't 0
+					current = current.myRight; // set current to get the right node
+
+				if (current.myLeft == null && current.myRight == null) { // if there are no more nodes under it (aka if
+																			// it's a leaf)
+					if (current.myValue == PSEUDO_EOF) // check if it's an error
+						break; // if it is, break out of the loop
+					else { // if it's not, then it stores a value
+						out.writeBits(BITS_PER_WORD, current.myValue); // write that value to output file
+						current = root; // start back at the top after leaf
 					}
 				}
 			}
-		}
-
-
-	}
-
-	private HuffNode readTreeHeader(BitInputStream in) {
-		/*
-		 * read a single bit
-if (bit == -1) throw exception
-if (bit == 0) {
-    left = recursiveCall()
-    right = recursiveCall()
-    return new HuffNode(0,0,left,right);
-}
-else {
-    value = read nine bits from input
-    return new HuffNode(value,0,null,null);
-}
-		 */
-
-		int bits = in.readBits(1);
-		if (bits == -1)
-			throw new HuffException (bits + "is not a valid bit");
-		if (bits == 0) {
-			HuffNode left = readTreeHeader(in);
-			HuffNode right = readTreeHeader(in);
-			return new HuffNode(0,0,left,right);
-		}
-		else {
-			int val = in.readBits(BITS_PER_WORD + 1);
-			return new HuffNode (val, 0, null, null);
 		}
 
 	}
