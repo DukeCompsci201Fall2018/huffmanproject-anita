@@ -95,7 +95,7 @@ public class HuffProcessor {
 			HuffNode right = pq.remove();
 			// I don't think this next line is right, because i'm not sure what to do for value?? So it's just 0 rn
 			// leaf? maybe a 1 value for leaf?
-			HuffNode t = new HuffNode(0, left.myWeight+right.myWeight, left, right);
+			HuffNode t = new HuffNode(1, left.myWeight+right.myWeight, left, right);
 			pq.add(t);
 		}
 		HuffNode root = pq.remove();
@@ -144,8 +144,8 @@ public class HuffProcessor {
 			out.writeBits(code.length(), Integer.parseInt(code, 2));
 		}
 
-		// String code = codings[PESUDO_EOF];
-		// out.writeBits(code.length(), Integer.parseInt(code, 2))
+		String code = codings[PESUDO_EOF];
+		out.writeBits(code.length(), Integer.parseInt(code, 2))
 
 	}
 
