@@ -112,28 +112,28 @@ public class HuffProcessor {
 
   private void findPaths (HuffNode root, String path, String[] encodings){
 		//if root is a leaf, an encoding for the value stored in the leaf is added to the array
-		if (root.left == null && root.right == null){
+		if (root.myLeft == null && root.myRight == null){
       encodings[root.myValue] = path;
       return;
     }
 
 		//recusive calls adding "0" to call to left subtree; adding "1" to call to right subtree
-    findPaths(root.left, path + "0", encodings);
-    findPaths(root.right, path + "1", encodings);
+    findPaths(root.myLeft, path + "0", encodings);
+    findPaths(root.myRight, path + "1", encodings);
   }
 
 	private void writeHeader(HuffNode root, BitOutputStream out) {
 		//if node is an internal node (not a leaf) write a single bit of zero
 		//if the node is a leaf, write a single bit of one followed by nine bits of the value stored in leaf
-		if (root.left == null && root.right == null){
+		if (root.myLeft == null && root.myRight == null){
 			out.writeBits(1, 1);
 			out.writeBits(9, root.myValue);
 			return;
 		}
 
 		out.writeBits(1, 0);
-		writeHeader(root.left, out);
-		writeHeader(root.right, out);
+		writeHeader(root.myLeft, out);
+		writeHeader(root.myRight, out);
 	}
 
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
