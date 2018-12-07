@@ -82,7 +82,8 @@ public class HuffProcessor {
 	 * @return the first node
 	 */
 	private HuffNode makeTreeFromCounts(int[] counts) {
-
+		//use a greedy algorithm and a priority queue to create the trie
+		//remove the minimal-weight nodes 
 		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
 
 		for (int i = 0; i < counts.length; i++) {
@@ -93,8 +94,7 @@ public class HuffProcessor {
 		while (pq.size() > 1) {
 			HuffNode left = pq.remove();
 			HuffNode right = pq.remove();
-			// I don't think this next line is right, because i'm not sure what to do for value?? So it's just 0 rn
-			// leaf? maybe a 1 value for leaf?
+			//value = 1 for being a leaf in the tree 
 			HuffNode t = new HuffNode(1, left.myWeight+right.myWeight, left, right);
 			pq.add(t);
 		}
@@ -123,7 +123,6 @@ public class HuffProcessor {
 	}
 
 	private void writeHeader(HuffNode root, BitOutputStream out) {
-		//if node is an internal node (not a leaf) write a single bit of zero
 		//if the node is a leaf, write a single bit of one followed by nine bits of the value stored in leaf
 		if (root.myLeft == null && root.myRight == null){
 			out.writeBits(1, 1);
@@ -131,7 +130,10 @@ public class HuffProcessor {
 			return;
 		}
 
+		//if node is an internal node (not a leaf) write a single bit of zero
 		out.writeBits(1, 0);
+		
+		//if a node is an internal node, recursive call to each subtree (myLeft and myRight) 
 		writeHeader(root.myLeft, out);
 		writeHeader(root.myRight, out);
 	}
@@ -140,15 +142,21 @@ public class HuffProcessor {
 		//read the file compressed one more time to compress
 		//encoding for each 8-bit chunck read is stored
 		//convert string of "0" and "1" into bit-sequence using Integer.parseInt
+		
+		//reset the BitInputStream
 		in.reset();
 		
+		//read BitInputStream again to compress it
 		int bitCode = in.readBits(BITS_PER_WORD);
+		
+		//convert encoding strings into a bit-sequence
 		while (bitCode >= 0) {
 			String code = codings[bitCode];
 			out.writeBits(code.length(), Integer.parseInt(code, 2));
 			bitCode = in.readBits(BITS_PER_WORD);
 		}
 
+		//write the bits that encode PSEUDO_EOF
 		String code = codings[PSEUDO_EOF];
 		out.writeBits(code.length(), Integer.parseInt(code, 2));
 
