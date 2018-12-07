@@ -25,7 +25,7 @@ public class HuffProcessor {
 
 	public static final int DEBUG_HIGH = 4;
 	public static final int DEBUG_LOW = 1;
-	
+
 
 	public HuffProcessor() {
 		this(0);
@@ -84,7 +84,7 @@ public class HuffProcessor {
 	 */
 	private HuffNode makeTreeFromCounts(int[] counts) {
 		//use a greedy algorithm and a priority queue to create the trie
-		//remove the minimal-weight nodes 
+		//remove the minimal-weight nodes
 		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
 
 		for (int i = 0; i < counts.length; i++) {
@@ -95,7 +95,7 @@ public class HuffProcessor {
 		while (pq.size() > 1) {
 			HuffNode left = pq.remove();
 			HuffNode right = pq.remove();
-			//value = 1 for being a leaf in the tree 
+			//value = 1 for being a leaf in the tree
 			HuffNode t = new HuffNode(1, left.myWeight+right.myWeight, left, right);
 			pq.add(t);
 		}
@@ -107,7 +107,7 @@ public class HuffProcessor {
 		//returns an array of Strings such that a[val] is the encoding for val
 		String[] encodings = new String[ALPH_SIZE + 1];
 		findPaths(root, "", encodings);
-		
+
 		return encodings;
 	}
 
@@ -115,18 +115,18 @@ public class HuffProcessor {
 		//if root is a leaf, an encoding for the value stored in the leaf is added to the array
 		if (root.myLeft == null && root.myRight == null){
 			encodings[root.myValue] = path;
-			
-			//print encodings for each root-to-leaf path found 
+
+			//print encodings for each root-to-leaf path found
 			//FOR DEBUGGING
 //			if (myDebugLevel >= DEBUG_HIGH) {
 //				System.out.printf("encoding for %d is %s\n", root.myValue, path);
 //			}
-			System.out.printf("encoding for %d is %s\n", root.myValue, path);
-			
+//			System.out.printf("encoding for %d is %s\n", root.myValue, path);
+
 			return;
 		}
 
-		//recusive calls adding "0" to call to left subtree; adding "1" to call to right subtree
+		//recursive calls adding "0" to call to left subtree; adding "1" to call to right subtree
 		findPaths(root.myLeft, path + "0", encodings);
 		findPaths(root.myRight, path + "1", encodings);
 	}
@@ -141,8 +141,8 @@ public class HuffProcessor {
 
 		//if node is an internal node (not a leaf) write a single bit of zero
 		out.writeBits(1, 0);
-		
-		//if a node is an internal node, recursive call to each subtree (myLeft and myRight) 
+
+		//if a node is an internal node, recursive call to each subtree (myLeft and myRight)
 		writeHeader(root.myLeft, out);
 		writeHeader(root.myRight, out);
 	}
@@ -151,13 +151,13 @@ public class HuffProcessor {
 		//read the file compressed one more time to compress
 		//encoding for each 8-bit chunck read is stored
 		//convert string of "0" and "1" into bit-sequence using Integer.parseInt
-		
+
 		//reset the BitInputStream
 		in.reset();
-		
+
 		//read BitInputStream again to compress it
 		int bitCode = in.readBits(BITS_PER_WORD);
-		
+
 		//convert encoding strings into a bit-sequence
 		while (bitCode >= 0) {
 			String code = codings[bitCode];
