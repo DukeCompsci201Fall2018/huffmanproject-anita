@@ -25,6 +25,7 @@ public class HuffProcessor {
 
 	public static final int DEBUG_HIGH = 4;
 	public static final int DEBUG_LOW = 1;
+	
 
 	public HuffProcessor() {
 		this(0);
@@ -106,7 +107,7 @@ public class HuffProcessor {
 		//returns an array of Strings such that a[val] is the encoding for val
 		String[] encodings = new String[ALPH_SIZE + 1];
 		findPaths(root, "", encodings);
-
+		
 		return encodings;
 	}
 
@@ -114,6 +115,14 @@ public class HuffProcessor {
 		//if root is a leaf, an encoding for the value stored in the leaf is added to the array
 		if (root.myLeft == null && root.myRight == null){
 			encodings[root.myValue] = path;
+			
+			//print encodings for each root-to-leaf path found 
+			//FOR DEBUGGING
+//			if (myDebugLevel >= DEBUG_HIGH) {
+//				System.out.printf("encoding for %d is %s\n", root.myValue, path);
+//			}
+			System.out.printf("encoding for %d is %s\n", root.myValue, path);
+			
 			return;
 		}
 
