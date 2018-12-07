@@ -145,7 +145,7 @@ public class HuffProcessor {
 		}
 
 		String code = codings[PESUDO_EOF];
-		out.writeBits(code.length(), Integer.parseInt(code, 2))
+		out.writeBits(code.length(), Integer.parseInt(code, 2));
 
 	}
 
