@@ -6,9 +6,9 @@ import java.util.PriorityQueue;
  * <P>
  * Changes include relying solely on a tree for header information and including
  * debug and bits read/written information
- * 
+ *
  * @author Owen Astrachan
- * 
+ *
  *         Students: JJ Jiang (jj252) & Anita Li (al367)
  */
 
@@ -47,6 +47,7 @@ public class HuffProcessor {
 
 		out.writeBits(BITS_PER_INT, HUFF_TREE);
 		writeHeader(root, out);
+
 		in.reset();
 		writeCompressedBits(codings, in, out);
 		out.close();
@@ -58,7 +59,7 @@ public class HuffProcessor {
 
 	/**
 	 * This method determines how frequently a character/chunk occurs in a stream
-	 * 
+	 *
 	 * @param in is the stream
 	 * @return an array with the amount of times each chunk occurs
 	 */
@@ -93,6 +94,7 @@ public class HuffProcessor {
 			HuffNode left = pq.remove();
 			HuffNode right = pq.remove();
 			// I don't think this next line is right, because i'm not sure what to do for value?? So it's just 0 rn
+			// leaf? maybe a 1 value for leaf?
 			HuffNode t = new HuffNode(0, left.myWeight+right.myWeight, left, right);
 			pq.add(t);
 		}
@@ -101,13 +103,37 @@ public class HuffProcessor {
 	}
 
 	private String[] makeCodingsFromTree(HuffNode root) {
-		// TODO Auto-generated method stub
-		return null;
+		//returns an array of Strings such that a[val] is the encoding for val
+		String[] encodings = new String[ALPH_SIZE + 1];
+		findPaths(root, "", encodings);
+
+		return encodings;
 	}
 
-	private void writeHeader(HuffNode root, BitOutputStream out) {
-		// TODO Auto-generated method stub
+  private void findPaths (HuffNode root, String path, String[] encodings){
+		//if root is a leaf, an encoding for the value stored in the leaf is added to the array
+		if (root.left == null && root.right == null){
+      encodings[root.myValue] = path;
+      return;
+    }
 
+		//recusive calls adding "0" to call to left subtree; adding "1" to call to right subtree
+    findPaths(root.left, path + "0", encodings);
+    findPaths(root.right, path + "1", encodings);
+  }
+
+	private void writeHeader(HuffNode root, BitOutputStream out) {
+		//if node is an internal node (not a leaf) write a single bit of zero
+		//if the node is a leaf, write a single bit of one followed by nine bits of the value stored in leaf
+		if (root.left == null && root.right == null){
+			out.writeBits(1, 1);
+			out.writeBits(9, root.myValue);
+			return;
+		}
+
+		out.writeBits(1, 0);
+		writeHeader(root.left, out);
+		writeHeader(root.right, out);
 	}
 
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
@@ -136,7 +162,7 @@ public class HuffProcessor {
 	/**
 	 * This method creates a tree of HuffNodes, in which 0 values are stored as tree
 	 * nodes and 1s, followed by letters are stored as leaf nodes
-	 * 
+	 *
 	 * @param in is the bitstream that must be converted to a tree
 	 * @return the HuffNode at the top, the root
 	 */
@@ -158,7 +184,7 @@ public class HuffProcessor {
 
 	/**
 	 * This method reads the tree created by the treeHeader
-	 * 
+	 *
 	 * @param root is the node that is the root of the tree
 	 * @param in   is the input stream
 	 * @param out  is the end result that needs to be written to
