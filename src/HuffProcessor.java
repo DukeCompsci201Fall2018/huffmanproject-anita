@@ -137,7 +137,15 @@ public class HuffProcessor {
 	}
 
 	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
-		// TODO Auto-generated method stub
+		//read the file compressed one more time to compress
+		//encoding for each 8-bit chunck read is stored
+		//convert string of "0" and "1" into bit-sequence using Integer.parseInt
+		for (String code : codings){
+			out.writeBits(code.length(), Integer.parseInt(code, 2));
+		}
+
+		// String code = codings[PESUDO_EOF];
+		// out.writeBits(code.length(), Integer.parseInt(code, 2))
 
 	}
 
