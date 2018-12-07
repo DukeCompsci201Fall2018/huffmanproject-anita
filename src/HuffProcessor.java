@@ -140,10 +140,13 @@ public class HuffProcessor {
 		//read the file compressed one more time to compress
 		//encoding for each 8-bit chunck read is stored
 		//convert string of "0" and "1" into bit-sequence using Integer.parseInt
-		if (codings.length != 0) {
-			for (String code : codings){
-				out.writeBits(code.length(), Integer.parseInt(code, 2));
-			}
+		in.reset();
+		
+		int bitCode = in.readBits(BITS_PER_WORD);
+		while (bitCode >= 0) {
+			String code = codings[bitCode];
+			out.writeBits(code.length(), Integer.parseInt(code, 2));
+			bitCode = in.readBits(BITS_PER_WORD);
 		}
 
 		String code = codings[PSEUDO_EOF];
