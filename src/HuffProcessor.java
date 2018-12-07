@@ -86,7 +86,7 @@ public class HuffProcessor {
 		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
 
 		for (int index : counts) {
-			if (counts[index] > 0)
+			if (counts[index] >= 0)
 				pq.add(new HuffNode(index,counts[index],null,null));
 		}
 
@@ -110,17 +110,17 @@ public class HuffProcessor {
 		return encodings;
 	}
 
-  private void findPaths (HuffNode root, String path, String[] encodings){
+	private void findPaths (HuffNode root, String path, String[] encodings){
 		//if root is a leaf, an encoding for the value stored in the leaf is added to the array
 		if (root.myLeft == null && root.myRight == null){
-      encodings[root.myValue] = path;
-      return;
-    }
+			encodings[root.myValue] = path;
+			return;
+		}
 
 		//recusive calls adding "0" to call to left subtree; adding "1" to call to right subtree
-    findPaths(root.myLeft, path + "0", encodings);
-    findPaths(root.myRight, path + "1", encodings);
-  }
+		findPaths(root.myLeft, path + "0", encodings);
+		findPaths(root.myRight, path + "1", encodings);
+	}
 
 	private void writeHeader(HuffNode root, BitOutputStream out) {
 		//if node is an internal node (not a leaf) write a single bit of zero
@@ -140,8 +140,10 @@ public class HuffProcessor {
 		//read the file compressed one more time to compress
 		//encoding for each 8-bit chunck read is stored
 		//convert string of "0" and "1" into bit-sequence using Integer.parseInt
-		for (String code : codings){
-			out.writeBits(code.length(), Integer.parseInt(code, 2));
+		if (codings.length != 0) {
+			for (String code : codings){
+				out.writeBits(code.length(), Integer.parseInt(code, 2));
+			}
 		}
 
 		String code = codings[PSEUDO_EOF];
@@ -210,7 +212,7 @@ public class HuffProcessor {
 					current = current.myRight; // set current to get the right node
 
 				if (current.myLeft == null && current.myRight == null) { // if there are no more nodes under it (aka if
-																			// it's a leaf)
+					// it's a leaf)
 					if (current.myValue == PSEUDO_EOF) // check if it's an error
 						break; // if it is, break out of the loop
 					else { // if it's not, then it stores a value
